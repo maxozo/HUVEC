@@ -56,17 +56,17 @@ def process_data(title,Prolif_Data):
     Impedence_Data_Prolif=Impedence_Data_Prolif.astype(float)
     return Impedence_Data_Prolif
 
-def normalise_timescale(Impedence_Data_Prolif,Info_Data,Time_Data_Prolif):
+def normalise_timescale(Impedence_Data_Prolif,Info_Data,Time_Data_Prolif,experiment_count):
     all_data= pd.DataFrame()
     for col in Impedence_Data_Prolif.columns:
         col2=col.replace(' ','')
         Name = Info_Data[Info_Data.iloc[:,0].str.replace('0','').str.contains(col2)].index
-        i=1
+        sample_replicate=1
         if Name.empty:
             Name = Info_Data[Info_Data.iloc[:,1].str.replace('0','').str.contains(col.replace(' ',''))].index
-            i=2
+            sample_replicate=2
         # Name=f"{col2}_{Name[0]}_{i}"
-        Name=f"{Name[0]}_{i}"
+        Name=f"{experiment_count}e_{Name[0]}_{sample_replicate}"
         Impedence_Data_Prolif.rename(columns={col:Name},inplace=True)
         data = pd.concat([pd.Series(0),Impedence_Data_Prolif[Name]])
         time =pd.concat([pd.Series(0),Time_Data_Prolif[col2]])
@@ -126,7 +126,9 @@ def main():
             all_data_remapped_Impedence = pd.DataFrame()
             all_data_remapped_Resistance = pd.DataFrame()
             all_data_remapped_Capacitance = pd.DataFrame()
+            experiment_count = 0
             for experiment in glob(f'{path}/*'):
+                experiment_count+=1
                 i+=1
                 print(experiment)
                 Wounding_File_Path = (glob(f"{experiment}/*WOUND*"))[0]
@@ -153,9 +155,9 @@ def main():
                 Capacitance_Data_Prolif = process_data('Cap.(nF)',Data)
                 Resistance_Data_Prolif = process_data('Res.(ohm)',Data)
                 
-                Impedence_Data_Prolif =normalise_timescale(Impedence_Data_Prolif,Info_Data,Time_Data_Prolif)
-                Capacitance_Data_Prolif =normalise_timescale(Capacitance_Data_Prolif,Info_Data,Time_Data_Prolif)
-                Resistance_Data_Prolif =normalise_timescale(Resistance_Data_Prolif,Info_Data,Time_Data_Prolif)
+                Impedence_Data_Prolif =normalise_timescale(Impedence_Data_Prolif,Info_Data,Time_Data_Prolif,experiment_count)
+                Capacitance_Data_Prolif =normalise_timescale(Capacitance_Data_Prolif,Info_Data,Time_Data_Prolif,experiment_count)
+                Resistance_Data_Prolif =normalise_timescale(Resistance_Data_Prolif,Info_Data,Time_Data_Prolif,experiment_count)
                 all_data_remapped_Impedence = pd.concat([all_data_remapped_Impedence, Impedence_Data_Prolif], axis=1)
                 all_data_remapped_Capacitance = pd.concat([all_data_remapped_Capacitance, Capacitance_Data_Prolif], axis=1)
                 all_data_remapped_Resistance = pd.concat([all_data_remapped_Resistance, Resistance_Data_Prolif], axis=1)
