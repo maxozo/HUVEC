@@ -20,69 +20,91 @@ import datetime as dt
 from scipy.stats import linregress
 from scipy.signal import savgol_filter
 from numpy import trapz
+from scipy.integrate import simps
 
 def get_injury_time(d,inp):
     slope_vals ={}
-    d.plot()
-    if (inp =='max'):
+    intercept_vals={}
+    # d.plot()
+    # if (inp =='max'):
         # for recovery we want to smooth the spectra, whereas for the injury, no, since we want to detect sudden change.
-        yhat = pd.Series(savgol_filter(d, 11, 3))
-        f = pd.Series(yhat)
-        f.index = d.index
-        d=f
-    d.plot()
-    for i in range(0, len(d), 1):
-        start = i
-        end = i+2
+    yhat = pd.Series(savgol_filter(d, 11, 4))
+    f = pd.Series(yhat)
+    f.index = d.index
+    d=f
+    # Start at the min point and step backwards untill the 
+    d_min = d[d == d.min()].index[0]
+    for i in range(d_min, 0, -1):
+        print(i)
+        # print(f"{d[i]} {d[i-1]}")
+        injury_time_start = i
+        if (all(list(d[i]>d.loc[i-20:i-1]))): 
+            break
 
-        slope_calc_window = d[start:end]
-        ind2 = slope_calc_window.index[len(slope_calc_window.index)-1]
-        ind1 = slope_calc_window.index[0]
-        x1 = slope_calc_window[ind1]
-        x2 = slope_calc_window[ind2]
-        # lr = linregress(slope_calc_window, slope_calc_window.index)
-        # print(lr.rvalue)
-        # slope_calc = stats.linregress([x2,x1],[ind1,ind2])
-        slope = (x2-x1)/(ind1-ind2)
-        # print(slope)
-        slope_vals[ind1-10]=[slope]
-        # slope = slope_calc.slope
 
-    Slopes1 = pd.DataFrame(slope_vals).T
-    strd = Slopes1.std()
+
+
+
+    # # d.plot()
+    # for i in range(0, len(d), 1):
+    #     start = i
+    #     end = i+2
+
+    #     slope_calc_window = d[start:end]
+    #     ind2 = slope_calc_window.index[len(slope_calc_window.index)-1]
+    #     ind1 = slope_calc_window.index[0]
+    #     x1 = slope_calc_window[ind1]
+    #     x2 = slope_calc_window[ind2]
+    #     lr = linregress(slope_calc_window, slope_calc_window.index)
+    #     # print(lr.intercept)
+    #     # slope_calc = stats.linregress([x2,x1],[ind1,ind2])
+    #     slope = (x2-x1)/(ind1-ind2)
+    #     # print(slope)
+    #     slope_vals[ind1]=[slope]
+    #     intercept_vals[ind1]=[lr.intercept]
+    #     # slope = slope_calc.slope
+
+    # Slopes1 = pd.DataFrame(slope_vals).T
+    # Intercepts1 = pd.DataFrame(intercept_vals).T
+    # # Intercepts1.plot()
+    # # Slopes1.plot()
     
-    # Slopes1.plot()
-    Q1 = Slopes1.quantile(0.1)
-    Q3 = Slopes1.quantile(0.9)
-    IQR = Q3 - Q1
-    Highest_bound = Q3 +  1.5*IQR
-    Lowest_bond = Q1 - 1.5*IQR
+    # strd = Slopes1.std()
+    # injury_time_start =Slopes1[Slopes1 ==Slopes1.max()[0]].dropna().index[0]-10
+   
+    # Q1 = Slopes1.quantile(0.25)
+    # Q3 = Slopes1.quantile(0.75)
+    # IQR = Q3 - Q1
+    # Highest_bound = Q3 +  1.5* IQR
+    # Lowest_bond = Q1 - 1.5*IQR
 
 
     # if (inp =='min'):
     #     Slopes2 = Slopes1[(Slopes1> Highest_bound ) ].dropna()
     # else:
-    #     Slopes2 = Slopes1[(Slopes1> Highest_bound ) ].dropna()
-    #     Slopes3 = Slopes1[(Slopes1< Lowest_bond ) ].dropna()
-    #     t = list(Slopes2.index)
-    #     Slopes4 = Slopes1.drop(t)
-    #     strd = Slopes4.std()
-    #     Slopes2 = Slopes1[(Slopes1> 2*strd ) ].dropna()
-    #     injury_time_start = min(Slopes2.index)
-    Slopes2 = Slopes1[(Slopes1> strd ) ].dropna()
-    injury_time_start = min(Slopes2.index)
-    
 
+    # #     Slopes2 = Slopes1[(Slopes1> Highest_bound ) ].dropna()
+    # #     Slopes3 = Slopes1[(Slopes1< Lowest_bond ) ].dropna()
+    # #     t = list(Slopes2.index)
+    # #     Slopes4 = Slopes1.drop(t)
+    # #     strd = Slopes4.std()
+    # #     Slopes2 = Slopes1[(Slopes1> 2*strd ) ].dropna()
+    # #     injury_time_start = min(Slopes2.index)
+    
+    #     Slopes2 = Slopes1[(Slopes1> strd ) ].dropna()
+    #     injury_time_start = min(Slopes2.index)
+    
+    # d.loc[:injury_time_start].plot()
 
     return injury_time_start        
 
 def main():
     print('ļets do some PCA')
     df = pd.DataFrame()
-    Data = pd.read_csv('/Users/mo11/work/HUVEC/Data2/Thrombin_Data_all_data_remapped_Resistance.csv',index_col=0)
+    Data = pd.read_csv('/Users/mo11/work/HUVEC/Data3/Log_Data/Thrombin_Data_all_data_remapped_Resistance.csv',index_col=0)
     d2 = Data[Data['freq']==4000]
     d2 = d2.drop('freq',axis=1)
-    d2 =d2.reset_index(drop=True)
+    d2.reset_index(drop=True,inplace=True)
     d2 = d2.fillna(0)
 
     # Here loop through the spectra and calculate the slope at each point
@@ -91,33 +113,36 @@ def main():
     
     All_experiments = set(idx_all.str.split('_').str[0])
     All_Experiment_Data = pd.DataFrame()
-    All_experiments=['12e','1e','9e']
+    All_calculations = {}
+    # All_experiments=['12e','1e','9e']
     for exp1 in All_experiments:
         
         # All the experiments performed together for this run
         exp = idx_all[idx_all.str.contains(f"^{exp1}_")]
         all_injury_times = []
         for id1 in exp:
-            # id1 =idx_all[idx_all.str.contains('E521_2')].values[0]
+            # id1 =idx_all[idx_all.str.contains('E1192_1')].values[0]
             # id1 =idx_all[idx_all.str.contains('E520_2')].values[0]
             # id1='12e_E590_2'
             # id1 = '12e_E588_2'
+            # id1='9e_E513_1'
+            # id1 ='2e_E551_1'
+            print(id1)
             if('EMPTY WEL' in id1):
                 continue
             
             
             d1 = d2.loc[d2[id1]!= 0,id1]
-            d1=d1[5:len(d1)-100]
+            d1=d1[10:len(d1)-100]
             min_value = d1[d1==d1.min()].index[0]
-
+            d1.plot()
             min1 = min_value-200
-            if(min1<0):
-                min1=0
+            if(min1<10):
+                min1=10
 
             d=d1.iloc[min1:min_value+200]
-            
-            injury_time_start = get_injury_time(d,'min')
-
+            d.plot()
+            injury_time_start = get_injury_time(d,'min')-5
             d_index = d.index
             d_reverse = d.iloc[::-1]
             d_reverse_reindex = d_reverse.reset_index()
@@ -128,11 +153,23 @@ def main():
 
             all_injury_times.append(injury_time_start)
             
-            Peak_window = d1[injury_time_start:injury_time_start+200]
-            Peak_window_only = d1[injury_time_start:injury_time_end]
+            Peak_window = d1.loc[injury_time_start:injury_time_start+200]
+            Peak_window_only = d1.loc[injury_time_start:injury_time_end]
             nor_Peak_window_only = Peak_window_only - Peak_window_only.iloc[0]
             nor_Peak_window_only.plot()
-            area = trapz(Peak_window_only, dx=5)
+            # Peak_window_only.plot()
+            area = abs(trapz(nor_Peak_window_only))
+            #nor_Peak_window_only.to_csv('test_trapz_method.csv')
+            area2 = abs(simps(nor_Peak_window_only)) #7840
+            print(area2)
+            min_val = nor_Peak_window_only.min()
+            min_val_time = nor_Peak_window_only[nor_Peak_window_only == min_val].index[0]
+            rec_val_time = nor_Peak_window_only.index[len(nor_Peak_window_only.index)-1]
+            rec_val = nor_Peak_window_only[rec_val_time]
+            recovery_time =rec_val_time - min_val_time
+            
+            slope_val = (rec_val_time-min_val_time)/(rec_val-min_val)
+            All_calculations[id1] = {'slope':slope_val, 'area trapz':area, 'area simpson':area2, 'recovery_time':recovery_time}
             print("area =", area)
             # d1.plot()
             
@@ -141,14 +178,16 @@ def main():
         print('Done with this experiment')
         Consensous_injury_start = pd.Series(all_injury_times).mode()[0]
         normalised_Peaks = d2.loc[Consensous_injury_start:Consensous_injury_start+200,exp]
-        normalised_Peaks.plot()
+        # normalised_Peaks.plot()
         normalised_Peaks=normalised_Peaks.reset_index(drop=True)
         All_Experiment_Data = pd.concat([All_Experiment_Data,normalised_Peaks], axis=1)
-        All_Experiment_Data.plot()
+        # All_Experiment_Data.plot()
 
         print('plotted')
+    All_calculations = pd.DataFrame(All_calculations).T
     cols1 = pd.Series(All_Experiment_Data.columns)
-    All_Experiment_Data.to_csv('Data2/Data_Extracted_Peaks/Extracted_Peaks_3e.csv')
+    All_Experiment_Data.to_csv('Data3/Data_Extracted_Peaks/Extracted_Peaks.csv')
+    All_calculations.to_csv('Data3/Data_Extracted_Peaks/Metrics_Calculations.csv')
     control_samples = All_Experiment_Data[cols1[cols1.str.contains('CONTROL')]]
     control_samples.plot()
     # print(pd.DataFrame(slope_vals))
