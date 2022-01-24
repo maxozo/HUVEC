@@ -15,6 +15,9 @@ def read_ECIS_Data(Wounding_File_Path,frequency=250):
     with open(Wounding_File_Path) as f:
         lines = f.readlines()
     Wounding_Data = pd.DataFrame(lines)
+    Date = Wounding_Data[Wounding_Data.iloc[:,0].str.startswith('Date ')][0]
+    Date_time = Date.iloc[0].split('Date , ')[1].replace('\n','')
+    Date_time = int(Date_time.replace('-','').replace(',','').replace(' ','').replace(':',''))
     Frequency_indexes = Wounding_Data[Wounding_Data.iloc[:,0].str.startswith('Frequency')]
     File_length = len(Wounding_Data)+60
     try:
@@ -36,7 +39,7 @@ def read_ECIS_Data(Wounding_File_Path,frequency=250):
         skiplist2 = (list(range(end,File_length)))
         # Wounding_Data1 = pd.read_csv(Wounding_File_Path,sep='XXXXXXX',skiprows=skiplist1+skiplist2)
         Wounding_Data1 = pd.read_csv(Wounding_File_Path,skiprows=skiplist1+skiplist2)
-        return Wounding_Data1
+        return Wounding_Data1,Date_time
     except:
         start=Frequency_indexes[Frequency_indexes.iloc[:,0].str.contains(frequency)].index[1]+1
         end = Frequency_indexes[Frequency_indexes.index>start].index[0]-1
@@ -45,7 +48,7 @@ def read_ECIS_Data(Wounding_File_Path,frequency=250):
         skiplist2 = (list(range(end,File_length)))
         # Wounding_Data1 = pd.read_csv(Wounding_File_Path,sep='XXXXXXX',skiprows=skiplist1+skiplist2)
         Wounding_Data1 = pd.read_csv(Wounding_File_Path,skiprows=skiplist1+skiplist2)
-        return Wounding_Data1
+        return Wounding_Data1,Date_time
 
 def process_data(title,Prolif_Data):
     Impedence_Data_Prolif = Prolif_Data[[col for col in Prolif_Data.columns if title in col]]
@@ -106,8 +109,13 @@ def Impedence_Data_prelog_normalise(Impedence_Data_pre):
     # As Kevin Suggested this normalisation may help in teasing out the actual differences in data.
     for column in Impedence_Data_pre:
         col1 = Impedence_Data_pre[column]
-        col1_log = col1/col1[1]
-        Impedence_Data_pre[column]=col1_log
+        # col1.plot()
+        # normalized_df.plot()
+        
+        mean_norm=(col1-col1.mean())/col1.std()
+        min_max_norm=(col1-col1.min())/(col1.max()-col1.min())
+        log_norm = col1/col1[1]
+        Impedence_Data_pre[column]=mean_norm
     return Impedence_Data_pre
 
 def main():
@@ -128,12 +136,14 @@ def main():
         all_data_remapped_Impedence_all = pd.DataFrame()
         all_data_remapped_Resistance_all = pd.DataFrame()
         all_data_remapped_Capacitance_all = pd.DataFrame()
+        all_Data_times_all=pd.DataFrame()
         for freq in all_frequencies:
             print(freq)
             data_paths={}
             all_data_remapped_Impedence = pd.DataFrame()
             all_data_remapped_Resistance = pd.DataFrame()
             all_data_remapped_Capacitance = pd.DataFrame()
+            all_Data_times=pd.DataFrame()
             experiment_count = 0
             for experiment in glob(f'{path}/*'):
                 experiment_count+=1
@@ -152,7 +162,7 @@ def main():
                 data_paths['Thrombin_Data']=Thrombin_File_Path
                 data_paths['Prolif_Data']=Proliferation_File_Path
                 File_Path= data_paths[data_type]
-                Data = read_ECIS_Data(File_Path,frequency=freq)
+                Data,Date_time = read_ECIS_Data(File_Path,frequency=freq)
 
                 Info_Data = pd.read_excel(Info_sheet_path,header=None,index_col=0).iloc[:,[0,1]]
                 Info_Data=Info_Data.dropna(axis=0)
@@ -167,6 +177,8 @@ def main():
                 Log_Capacitance_Data_pre = Impedence_Data_prelog_normalise(Capacitance_Data_pre)
                 Log_Resistance_Data_pre = Impedence_Data_prelog_normalise(Resistance_Data_pre)
                 
+                
+                
                 Impedence_Data =normalise_timescale(Log_Impedence_Data_pre,Info_Data,Time_Data_pre,experiment_count)
                 Capacitance_Data =normalise_timescale(Log_Capacitance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
                 Resistance_Data =normalise_timescale(Log_Resistance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
@@ -174,6 +186,16 @@ def main():
                 all_data_remapped_Impedence = pd.concat([all_data_remapped_Impedence, Impedence_Data], axis=1)
                 all_data_remapped_Capacitance = pd.concat([all_data_remapped_Capacitance, Capacitance_Data], axis=1)
                 all_data_remapped_Resistance = pd.concat([all_data_remapped_Resistance, Resistance_Data], axis=1)
+                Data_covar = pd.DataFrame(Impedence_Data.columns)
+                Data_covar['Date_time']=Date_time
+                Data_covar['data_type']=data_type
+                Data_covar.rename(columns={0:'Sample'},inplace=True)
+                Data_covar['Group']='Sample'
+                Data_covar.loc[Data_covar['Sample'].str.contains('CONTROL'),'Group']='CONTROL'
+                Data_covar.loc[Data_covar['Sample'].str.contains('EMPTY WELL'),'Group']='EMPTY_WELL'
+                Data_covar['label']=Data_covar['Sample'].str.split('_').str[1]
+                all_Data_times = pd.concat([all_Data_times,Data_covar],axis=0)
+                
                 # double_check_if rescaling dont mess up data
                 # Impedence_Data_pre['1e_E522_1'].reset_index()['1e_E522_1'].plot()
                 # Impedence_Data['1e_E522_1'].reset_index()['1e_E522_1'].plot()
@@ -187,12 +209,16 @@ def main():
             all_data_remapped_Resistance_all = pd.concat([all_data_remapped_Resistance_all,all_data_remapped_Resistance])
             all_data_remapped_Capacitance_all = pd.concat([all_data_remapped_Capacitance_all,all_data_remapped_Capacitance])
             all_data_remapped_Impedence_all = pd.concat([all_data_remapped_Impedence_all,all_data_remapped_Impedence])
+            all_Data_times_all=pd.concat([all_Data_times_all,all_Data_times])
 
-
-        all_data_remapped_Resistance_all.to_csv(f'Data3/Log_Data/{data_type}_all_data_remapped_Resistance.csv')
-        all_data_remapped_Capacitance_all.to_csv(f'Data3/Log_Data/{data_type}_all_data_remapped_Capacitance.csv')
-        all_data_remapped_Impedence_all.to_csv(f'Data3/Log_Data/{data_type}_all_data_remapped_Impedence.csv')
-        all_data_remapped_Capacitance.plot()
+        all_Data_times_all_no_dubs = all_Data_times_all.drop_duplicates()
+        all_Data_times_all_no_dubs['exp_id'] = all_Data_times_all_no_dubs.Sample.str.split('_').str[0]
+        all_Data_times_all_no_dubs.to_csv(f'Data3/{data_type}_metadata.tsv',sep='\t',index=False)
+        
+        # all_data_remapped_Resistance_all.to_csv(f'Data3/mean_norm/{data_type}_all_data_remapped_Resistance.csv')
+        # all_data_remapped_Capacitance_all.to_csv(f'Data3/mean_norm/{data_type}_all_data_remapped_Capacitance.csv')
+        # all_data_remapped_Impedence_all.to_csv(f'Data3/mean_norm/{data_type}_all_data_remapped_Impedence.csv')
+        # all_data_remapped_Capacitance.plot()
     print('Done')
 
 if __name__ == '__main__':
