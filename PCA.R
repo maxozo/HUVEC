@@ -2,12 +2,17 @@ library(PCAtools)
 library("factoextra")
 library(ade4)
 #/Users/mo11/work/HUVEC/Data3/min_max/Data_Extracted_Peaks/Metrics_Calculations.csv
+
+
 Experimental_grops_load_peaks = t(read.table('/Users/mo11/work/HUVEC/Data3/FC_norm/Data_Extracted_Peaks/Extracted_Peaks.csv',, fill = TRUE,row.names = 1,header = TRUE,sep = ','))
 Experimental_grops_load_features = read.table('/Users/mo11/work/HUVEC/Data3/FC_norm/Data_Extracted_Peaks/Metrics_Calculations.csv',, fill = TRUE,row.names = 1,header = TRUE,sep = ',')
 Experimental_grops_load_features_normalised = read.table('/Users/mo11/work/HUVEC/Data3/FC_norm/Data_Extracted_Peaks/Norm_Metrics_Calculations.csv',, fill = TRUE,row.names = 1,header = TRUE,sep = ',')
 
+#Experimental_grops_load_peaks = t(read.table('/Users/mo11/work/HUVEC/Data3/Thrombin_Data_metadata.tsv',, fill = TRUE,header = TRUE,sep = ','))
+#ix <- which(c('X', 'freq') == rownames(Experimental_grops_load_peaks))
+#Experimental_grops_load_peaks = Experimental_grops_load_peaks[-c(ix), ]   
 
-Experimental_grops_load = Experimental_grops_load_features_normalised
+Experimental_grops_load = Experimental_grops_load_features
 rownames(Experimental_grops_load)=gsub('X', '',rownames(Experimental_grops_load))
 Metadata = read.table('/Users/mo11/work/HUVEC/Data3/Thrombin_Data_metadata.tsv', fill = TRUE,row.names = 1,header = TRUE,sep = '\t')
 
@@ -18,10 +23,12 @@ Exp_data = t2[0:d1]
 
 Exp_data[is.na(Exp_data)] <- 100000
 res.pca <- dudi.pca(Exp_data,
-                    scannf = FALSE,   # Hide scree plot
+                    scannf = FALSE,center = FALSE, scale = FALSE,  # Hide scree plot
                     nf = 5            # Number of components kept in the results
 )
 
+res.pca <-princomp(Exp_data)
+res.pca <-prcomp(Exp_data,scale=True)
 #Colored based on he time
 fviz_pca_ind(res.pca,axes = c(1, 2),col.ind = t2$Date_time, ,repel = TRUE) +
   scale_color_gradient2(low="white", mid="blue",

@@ -107,16 +107,54 @@ def get_all_frequencies(data_type,path):
 
 def Impedence_Data_prelog_normalise(Impedence_Data_pre):
     # As Kevin Suggested this normalisation may help in teasing out the actual differences in data.
+    CONTROLS = Impedence_Data_pre[list(Impedence_Data_pre.columns[Impedence_Data_pre.columns.str.contains('CONTROL')])]
+    NOT_CONTROLS = Impedence_Data_pre[list(Impedence_Data_pre.columns[~Impedence_Data_pre.columns.str.contains('CONTROL')])]
+    Mean_CONTROLS = CONTROLS.mean(axis=1)
+    
     for column in Impedence_Data_pre:
         col1 = Impedence_Data_pre[column]
-        # col1.plot()
-        # normalized_df.plot()
         
+        # Here we can also add in the controls to get the control scaled normalisation
+        col1_and_CONTROLS = Mean_CONTROLS.to_frame().copy()
+        col1_and_CONTROLS['Sample'] = col1
+        col1_and_CONTROLS = col1_and_CONTROLS.loc[~(col1_and_CONTROLS.sum(axis=1)==0)] # We remove the initial 0 to calculate the scaling factors, as this was arbitately added
+        # Mean Normalisation
         mean_norm=(col1-col1.mean())/col1.std()
+        mean_norm_with_controls=(col1-col1_and_CONTROLS.mean().mean())/col1_and_CONTROLS.std().std()
+        
+        # Min-Max Normalisation
         min_max_norm=(col1-col1.min())/(col1.max()-col1.min())
-        log_norm = col1/col1[1]
-        Impedence_Data_pre[column]=mean_norm
+        min_max_norm_with_controls=(col1-col1_and_CONTROLS.min().min())/(col1_and_CONTROLS.max().max()-col1_and_CONTROLS.min().min())
+        
+        # Internal FC normalisation
+        Norm_Value = col1.loc[~(col1==0)].iloc[0]
+        log_norm = col1/Norm_Value
+        # FC Against Control Mean intial value
+        Norm_Value = Mean_CONTROLS.loc[~(Mean_CONTROLS==0)].iloc[0]
+        log_control_norm = col1/Norm_Value
+        
+        # log_control_norm.plot()
+        
+        # Replace the Data with norm version
+        Impedence_Data_pre[column]=min_max_norm_with_controls
+        
     return Impedence_Data_pre
+
+def normalise_against_Controls(Data):
+    CONTROLS = Data[list(Data.columns[Data.columns.str.contains('CONTROL')])]
+    NOT_CONTROLS = Data[list(Data.columns[~Data.columns.str.contains('CONTROL')])]
+    Mean_CONTROLS = CONTROLS.mean(axis=1)
+    Norm_Value = Mean_CONTROLS.loc[~(Mean_CONTROLS==0)][0]
+    Data1 = NOT_CONTROLS['1e_E521_1']
+    Data1.plot()
+    Data_Normalised = Data1/Norm_Value
+    Data_Normalised1 = Data1/Mean_CONTROLS
+    Data_Normalised_not = Data1
+    Data_Normalised_not.plot()
+    Data_Normalised.plot()
+    Mean_CONTROLS.plot()
+    Data_Normalised1.plot()
+    print('Done')
 
 def main():
     path='/Volumes/GoogleDrive/My Drive/HUVEC/ECIS/ECIS Data'
@@ -172,16 +210,19 @@ def main():
                 Time_Data_pre = process_data('Time(hrs)',Data)
                 Capacitance_Data_pre = process_data('Cap.(nF)',Data)
                 Resistance_Data_pre = process_data('Res.(ohm)',Data)
+            
+                Impedence_Data = normalise_timescale(Impedence_Data_pre,Info_Data,Time_Data_pre,experiment_count)
+                Capacitance_Data =normalise_timescale(Capacitance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
+                Resistance_Data =normalise_timescale(Resistance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
                 
-                Log_Impedence_Data_pre = Impedence_Data_prelog_normalise(Impedence_Data_pre)
-                Log_Capacitance_Data_pre = Impedence_Data_prelog_normalise(Capacitance_Data_pre)
-                Log_Resistance_Data_pre = Impedence_Data_prelog_normalise(Resistance_Data_pre)
+                Impedence_Data = Impedence_Data_prelog_normalise(Impedence_Data)
+                Capacitance_Data = Impedence_Data_prelog_normalise(Capacitance_Data)
+                Resistance_Data = Impedence_Data_prelog_normalise(Resistance_Data)
                 
-                
-                
-                Impedence_Data =normalise_timescale(Log_Impedence_Data_pre,Info_Data,Time_Data_pre,experiment_count)
-                Capacitance_Data =normalise_timescale(Log_Capacitance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
-                Resistance_Data =normalise_timescale(Log_Resistance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
+                # Here do the normalisations against the control samples.
+                # Impedence_Data = normalise_against_Controls(Impedence_Data)
+                # Capacitance_Data = normalise_against_Controls(Capacitance_Data)
+                # Resistance_Data = normalise_against_Controls(Resistance_Data)
                 
                 all_data_remapped_Impedence = pd.concat([all_data_remapped_Impedence, Impedence_Data], axis=1)
                 all_data_remapped_Capacitance = pd.concat([all_data_remapped_Capacitance, Capacitance_Data], axis=1)
@@ -213,12 +254,12 @@ def main():
 
         all_Data_times_all_no_dubs = all_Data_times_all.drop_duplicates()
         all_Data_times_all_no_dubs['exp_id'] = all_Data_times_all_no_dubs.Sample.str.split('_').str[0]
-        all_Data_times_all_no_dubs.to_csv(f'Data3/{data_type}_metadata.tsv',sep='\t',index=False)
         
-        # all_data_remapped_Resistance_all.to_csv(f'Data3/mean_norm/{data_type}_all_data_remapped_Resistance.csv')
-        # all_data_remapped_Capacitance_all.to_csv(f'Data3/mean_norm/{data_type}_all_data_remapped_Capacitance.csv')
-        # all_data_remapped_Impedence_all.to_csv(f'Data3/mean_norm/{data_type}_all_data_remapped_Impedence.csv')
-        # all_data_remapped_Capacitance.plot()
+        # all_Data_times_all_no_dubs.to_csv(f'Data3/{data_type}_metadata.tsv',sep='\t',index=False)
+        all_data_remapped_Resistance_all.to_csv(f'Data3/min_max_controls/{data_type}_all_data_remapped_Resistance.csv')
+        all_data_remapped_Capacitance_all.to_csv(f'Data3/min_max_controls/{data_type}_all_data_remapped_Capacitance.csv')
+        all_data_remapped_Impedence_all.to_csv(f'Data3/min_max_controls/{data_type}_all_data_remapped_Impedence.csv')
+        all_data_remapped_Capacitance.plot()
     print('Done')
 
 if __name__ == '__main__':

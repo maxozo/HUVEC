@@ -14,7 +14,7 @@ import pandas as pd
 def main():
     print('ļets do some PCA')
     type = 'peak' #or slope
-    norm_method ='FC_norm'
+    norm_method ='not_normalised'
     Data = pd.read_csv(f'/Users/mo11/work/HUVEC/Data3/{norm_method}/Data_Extracted_Peaks/Metrics_Calculations.csv',index_col=0)
     # Now Loop through eachof the experiments and calculate the scaling factor based on the control.
     

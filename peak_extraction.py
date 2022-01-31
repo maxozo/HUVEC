@@ -24,11 +24,7 @@ from sklearn.metrics import r2_score
 
 
 def get_injury_time(d,inp):
-    slope_vals ={}
-    intercept_vals={}
-    # d.plot()
-    # if (inp =='max'):
-        # for recovery we want to smooth the spectra, whereas for the injury, no, since we want to detect sudden change.
+
     yhat = pd.Series(savgol_filter(d, 11, 4))
     f = pd.Series(yhat)
     f.index = d.index
@@ -37,75 +33,111 @@ def get_injury_time(d,inp):
     d_min = d[d == d.min()].index[0]
     if inp=='min':
         for i in range(d_min, 0, -1):
-            print(i)
-            # print(f"{d[i]} {d[i-1]}")
             injury_time_start = i
             if (all(list(d[i]>d.loc[i-5:i-1]))): 
                 break
     else:
         for i in range(d_min, 0, -1):
-            print(i)
-            # print(f"{d[i]} {d[i-1]}")
             injury_time_start = i
             if (all(list(d[i]>d.loc[i-20:i-1]))): 
-                break       
+                break    
+            
+            
+            
+                 # OLD METHOD           
+    #             slope_vals ={}
+    # intercept_vals={}
+    # d.plot()
+    # if (inp =='max'):
+        # for recovery we want to smooth the spectra, whereas for the injury, no, since we want to detect sudden change.   
+
+            # # d.plot()
+            # for i in range(0, len(d), 1):
+            #     start = i
+            #     end = i+2
+
+            #     slope_calc_window = d[start:end]
+            #     ind2 = slope_calc_window.index[len(slope_calc_window.index)-1]
+            #     ind1 = slope_calc_window.index[0]
+            #     x1 = slope_calc_window[ind1]
+            #     x2 = slope_calc_window[ind2]
+            #     lr = linregress(slope_calc_window, slope_calc_window.index)
+            #     # print(lr.intercept)
+            #     # slope_calc = stats.linregress([x2,x1],[ind1,ind2])
+            #     slope = (x2-x1)/(ind1-ind2)
+            #     # print(slope)
+            #     slope_vals[ind1]=[slope]
+            #     intercept_vals[ind1]=[lr.intercept]
+            #     # slope = slope_calc.slope
+
+            # Slopes1 = pd.DataFrame(slope_vals).T
+            # Intercepts1 = pd.DataFrame(intercept_vals).T
+            # # Intercepts1.plot()
+            # # Slopes1.plot()
+            
+            # strd = Slopes1.std()
+            # injury_time_start =Slopes1[Slopes1 ==Slopes1.max()[0]].dropna().index[0]-10
+        
+            # Q1 = Slopes1.quantile(0.25)
+            # Q3 = Slopes1.quantile(0.75)
+            # IQR = Q3 - Q1
+            # Highest_bound = Q3 +  1.5* IQR
+            # Lowest_bond = Q1 - 1.5*IQR
 
 
+            # if (inp =='min'):
+            #     Slopes2 = Slopes1[(Slopes1> Highest_bound ) ].dropna()
+            # else:
 
-
-
-    # # d.plot()
-    # for i in range(0, len(d), 1):
-    #     start = i
-    #     end = i+2
-
-    #     slope_calc_window = d[start:end]
-    #     ind2 = slope_calc_window.index[len(slope_calc_window.index)-1]
-    #     ind1 = slope_calc_window.index[0]
-    #     x1 = slope_calc_window[ind1]
-    #     x2 = slope_calc_window[ind2]
-    #     lr = linregress(slope_calc_window, slope_calc_window.index)
-    #     # print(lr.intercept)
-    #     # slope_calc = stats.linregress([x2,x1],[ind1,ind2])
-    #     slope = (x2-x1)/(ind1-ind2)
-    #     # print(slope)
-    #     slope_vals[ind1]=[slope]
-    #     intercept_vals[ind1]=[lr.intercept]
-    #     # slope = slope_calc.slope
-
-    # Slopes1 = pd.DataFrame(slope_vals).T
-    # Intercepts1 = pd.DataFrame(intercept_vals).T
-    # # Intercepts1.plot()
-    # # Slopes1.plot()
-    
-    # strd = Slopes1.std()
-    # injury_time_start =Slopes1[Slopes1 ==Slopes1.max()[0]].dropna().index[0]-10
-   
-    # Q1 = Slopes1.quantile(0.25)
-    # Q3 = Slopes1.quantile(0.75)
-    # IQR = Q3 - Q1
-    # Highest_bound = Q3 +  1.5* IQR
-    # Lowest_bond = Q1 - 1.5*IQR
-
-
-    # if (inp =='min'):
-    #     Slopes2 = Slopes1[(Slopes1> Highest_bound ) ].dropna()
-    # else:
-
-    # #     Slopes2 = Slopes1[(Slopes1> Highest_bound ) ].dropna()
-    # #     Slopes3 = Slopes1[(Slopes1< Lowest_bond ) ].dropna()
-    # #     t = list(Slopes2.index)
-    # #     Slopes4 = Slopes1.drop(t)
-    # #     strd = Slopes4.std()
-    # #     Slopes2 = Slopes1[(Slopes1> 2*strd ) ].dropna()
-    # #     injury_time_start = min(Slopes2.index)
-    
-    #     Slopes2 = Slopes1[(Slopes1> strd ) ].dropna()
-    #     injury_time_start = min(Slopes2.index)
-    
-    # d.loc[:injury_time_start].plot()
+            # #     Slopes2 = Slopes1[(Slopes1> Highest_bound ) ].dropna()
+            # #     Slopes3 = Slopes1[(Slopes1< Lowest_bond ) ].dropna()
+            # #     t = list(Slopes2.index)
+            # #     Slopes4 = Slopes1.drop(t)
+            # #     strd = Slopes4.std()
+            # #     Slopes2 = Slopes1[(Slopes1> 2*strd ) ].dropna()
+            # #     injury_time_start = min(Slopes2.index)
+            
+            #     Slopes2 = Slopes1[(Slopes1> strd ) ].dropna()
+            #     injury_time_start = min(Slopes2.index)
+            
+            # d.loc[:injury_time_start].plot()
 
     return injury_time_start        
+
+def calculate_peak_metrics(Peak_window_only,injury_time_start,injury_time_end,min_value,d1):
+
+    nor_Peak_window_only = Peak_window_only - Peak_window_only.iloc[0]
+    nor_Peak_window_only.plot()
+    # Peak_window_only.plot()
+    area = abs(trapz(nor_Peak_window_only))
+    #nor_Peak_window_only.to_csv('test_trapz_method.csv')
+    area2 = abs(simps(nor_Peak_window_only)) #7840
+    # print(area2)
+    min_val = nor_Peak_window_only.min()
+    min_val_time = nor_Peak_window_only[nor_Peak_window_only == min_val].index[0]
+    rec_val_time = nor_Peak_window_only.index[len(nor_Peak_window_only.index)-1]
+    rec_val = nor_Peak_window_only[rec_val_time]
+    recovery_time =rec_val_time - min_val_time
+    # slope_before_treatment
+    before_treatment = d1.loc[:injury_time_start]
+    # before_treatment.plot()
+    slope_val_before_treatment = (injury_time_start-before_treatment.index[0])/(before_treatment[injury_time_start]-before_treatment.iloc[0])
+    # slope after treatment
+    after_treatment = d1.loc[injury_time_end:injury_time_end+200]
+    # after_treatment.plot()
+    slope_val_after_treatment = (200)/(after_treatment[after_treatment.index[-1]]-after_treatment.iloc[0])
+    
+    # time needed to recover to 50% injury area
+    injury_val_at_50 = before_treatment[before_treatment.index[-1]]+d1.min()/2 #changed - 
+    values_after_time_of_50 = Peak_window_only.loc[min_value:][Peak_window_only.loc[min_value:]>injury_val_at_50]
+    # values_after_time_of_50.plot()
+    try:
+        time_to_recover_to_50 = values_after_time_of_50.index[0]-min_value
+    except:
+        time_to_recover_to_50 =None
+    # slope of recovery
+    slope_val = (rec_val_time-min_val_time)/(rec_val-min_val)
+    return {'slope_of_recovery':slope_val,'slope_val_after_treatment':slope_val_after_treatment,'slope_val_before_treatment':slope_val_before_treatment, 'area trapz':area, 'area simpson':area2, 'recovery_time':recovery_time,'time_to_recover_to_50':time_to_recover_to_50}
 
 def scale_to_0(normalised_Peaks):
     for column in normalised_Peaks:
@@ -114,12 +146,40 @@ def scale_to_0(normalised_Peaks):
         normalised_Peaks[column]=col1-col1.reset_index(drop=True)[0]
     return normalised_Peaks
 
+def invert(d1):
+    # this flips the peaks into valeys and vice versa, needed to be able to apply exactly same mathed as for Resistance.
+    for i,val1 in d1.iteritems():
+        if val1>0:
+            val1 = float(f"-{val1}")
+        elif val1<0:
+            val1 = float(f"{val1}".replace('-',''))   
+        d1[i]=val1
+    return d1
+    
+
+def peak_detection(d1):
+    min_value = d1[d1==d1.min()].index[0]
+    min1 = min_value-200
+    if(min1<10):
+        min1=10
+    d=d1.iloc[min1:min_value+200]
+    # d.plot()
+    injury_time_start = get_injury_time(d,'min')-5
+    d_reverse = d.iloc[::-1]
+    d_reverse_reindex = d_reverse.reset_index()
+    d_rev = d_reverse.reset_index(drop=True)
+    arbitary_injury_time_end = get_injury_time(d_rev,'max')
+    injury_time_end = int(d_reverse_reindex.iloc[arbitary_injury_time_end]['index'])
+    return injury_time_start,injury_time_end,min_value
+
 def main():
     print('ļets do some PCA')
     df = pd.DataFrame()
     type = 'peak' #or slope
-    norm_method ='not_normalised'
-    Data = pd.read_csv(f'/Users/mo11/work/HUVEC/Data3/{norm_method}/Thrombin_Data_all_data_remapped_Resistance.csv',index_col=0)
+    treatment='Thrombin' #Thrombin|Wounding|Prolif
+    measurement = 'Resistance' # Resistance|Capacitance|Impedence
+    norm_method ='min_max_controls' #FC_norm | mean_norm | min_max | min_max_controls | not_normalised
+    Data = pd.read_csv(f'/Users/mo11/work/HUVEC/Data3/{norm_method}/{treatment}_Data_all_data_remapped_{measurement}.csv',index_col=0)
     d2 = Data[Data['freq']==4000]
     d2 = d2.drop('freq',axis=1)
     d2.reset_index(drop=True,inplace=True)
@@ -132,13 +192,20 @@ def main():
     All_experiments = set(idx_all.str.split('_').str[0])
     All_Experiment_Data = pd.DataFrame()
     All_calculations = {}
+    Experiment_injury_times = {}
     # All_experiments=['12e','1e','9e']
     for exp1 in All_experiments:
         # exp1='2e'
-        # exp1='14e'
+        # exp1='16e'
+        exp1='14e'
         # All the experiments performed together for this run
         exp = idx_all[idx_all.str.contains(f"^{exp1}_")]
         all_injury_times = []
+        # Detect the aproximate injury time using the EMPTY wells
+        EMPTY_WELLS = d2[list(exp[exp.str.contains('EMPTY WELL')])]
+        # experiment 8e doesnt have an empty wells in them.
+        
+        # EMPTY_WELLS.plot()
         for id1 in exp:
             # id1 =idx_all[idx_all.str.contains('E1192_1')].values[0]
             # id1 =idx_all[idx_all.str.contains('E520_2')].values[0]
@@ -148,79 +215,85 @@ def main():
             # id1 ='14e_E659_1'
             # id1='14e_E694_2'
             # id1='11e_E509_2' - does not ever recover to 50%
+            
+            # id1='3e_E530_1' - this fails in a capacitance analysis
+            # id1='3e_E528_2'
             print(id1)
             if('EMPTY WEL' in id1):
                 continue
             
-            
             d1 = d2.loc[d2[id1]!= 0,id1] 
-            d1.plot()
+            if measurement=='Capacitance':
+                d1 = invert(d1)
             d3=d1.reset_index()
             d1_index = d3['index']
             d1=d1.reset_index(drop=True)
             d1=d1[10:len(d1)-100]
-            min_value = d1[d1==d1.min()].index[0]
-            
-
-            min1 = min_value-200
-            if(min1<10):
-                min1=10
-
-            d=d1.iloc[min1:min_value+200]
-            # d.plot()
-            injury_time_start = get_injury_time(d,'min')-5
-            d_index = d.index
-            d_reverse = d.iloc[::-1]
-            d_reverse_reindex = d_reverse.reset_index()
-            d_rev = d_reverse.reset_index(drop=True)
-            arbitary_injury_time_end = get_injury_time(d_rev,'max')
-            injury_time_end = int(d_reverse_reindex.iloc[arbitary_injury_time_end]['index'])
-            # Now reverse the data and detect the end of injuty time
-
+            injury_time_start,injury_time_end,min_value = peak_detection(d1)
             injury_time_start_norm = d1_index[injury_time_start]
+            
+            
             all_injury_times.append(injury_time_start_norm)
-            
-            Peak_window = d1.loc[injury_time_start:injury_time_start+200]
-            Peak_window_only = d1.loc[injury_time_start:injury_time_end]
-            nor_Peak_window_only = Peak_window_only - Peak_window_only.iloc[0]
-            nor_Peak_window_only.plot()
-            # Peak_window_only.plot()
-            area = abs(trapz(nor_Peak_window_only))
-            #nor_Peak_window_only.to_csv('test_trapz_method.csv')
-            area2 = abs(simps(nor_Peak_window_only)) #7840
-            # print(area2)
-            min_val = nor_Peak_window_only.min()
-            min_val_time = nor_Peak_window_only[nor_Peak_window_only == min_val].index[0]
-            rec_val_time = nor_Peak_window_only.index[len(nor_Peak_window_only.index)-1]
-            rec_val = nor_Peak_window_only[rec_val_time]
-            recovery_time =rec_val_time - min_val_time
-            # slope_before_treatment
-            before_treatment = d1.loc[:injury_time_start]
-            # before_treatment.plot()
-            slope_val_before_treatment = (injury_time_start-before_treatment.index[0])/(before_treatment[injury_time_start]-before_treatment.iloc[0])
-            # slope after treatment
-            after_treatment = d1.loc[injury_time_end:injury_time_end+200]
-            # after_treatment.plot()
-            slope_val_after_treatment = (200)/(after_treatment[after_treatment.index[-1]]-after_treatment.iloc[0])
-            
-            # time needed to recover to 50% injury area
-            injury_val_at_50 = before_treatment[before_treatment.index[-1]]+d1.min()/2
-            values_after_time_of_50 = Peak_window_only.loc[min_value:][Peak_window_only.loc[min_value:]>injury_val_at_50]
-            # values_after_time_of_50.plot()
             try:
-                time_to_recover_to_50 = values_after_time_of_50.index[0]-min_value
+                Experiment_injury_times[injury_time_start_norm].append(id1)
             except:
-                time_to_recover_to_50 =None
-            # slope of recovery
-            slope_val = (rec_val_time-min_val_time)/(rec_val-min_val)
-            All_calculations[id1] = {'slope_of_recovery':slope_val,'slope_val_after_treatment':slope_val_after_treatment,'slope_val_before_treatment':slope_val_before_treatment, 'area trapz':area, 'area simpson':area2, 'recovery_time':recovery_time,'time_to_recover_to_50':time_to_recover_to_50}
-            print("area =", area)
-            # d1.plot()
+                Experiment_injury_times[injury_time_start_norm]=[id1]
+            
+            Peak_window_only = d1.loc[injury_time_start:injury_time_end]
+            measurements = calculate_peak_metrics(Peak_window_only,injury_time_start,injury_time_end,min_value,d1)
+            measurements['flagged as outlier']=False
+            All_calculations[id1] = measurements
+            d1.plot()
             
             print('plotted')
     
         print('Done with this experiment')
         Consensous_injury_start = pd.Series(all_injury_times).mode()[0]
+        
+        # We use the consensous peak measurements to detect if any of the measurements may be outliers. 
+        all_injury_times2 = pd.DataFrame(all_injury_times)
+        Q1 = all_injury_times2.quantile(0.25)
+        Q3 = all_injury_times2.quantile(0.75)
+        IQR = Q3 - Q1
+        if(IQR[0]==0):
+            # we handle the exception detection when all are the same besides 1
+            IQR = Consensous_injury_start*0.1
+        Highest_bound = Q3 +  1.5* IQR
+        Lowest_bond = Q1 - 1.5*IQR
+        
+        Outliers1 = all_injury_times2.loc[(all_injury_times2>Highest_bound)[0]]
+        Outliers2 = all_injury_times2.loc[(all_injury_times2<Lowest_bond)[0]]
+        Outliers=pd.concat([Outliers1,Outliers2])
+        # These would have had a wrong calculations performed, and may need to be repeated. Hence we repeat the calculations based on consensous peak and flag the measurement as an outlier.
+        for i,outlier in Outliers.iterrows():
+           idx = (outlier.values[0])
+           ids = Experiment_injury_times[idx]
+           
+           for id1 in ids:
+                d1 = d2.loc[d2[id1]!= 0,id1] 
+                if measurement=='Capacitance':
+                    d1 = invert(d1)
+                d3=d1.reset_index()
+                d1_index = d3['index']
+                d1=d1.reset_index(drop=True)
+                d1.plot()
+                d1=d1[Consensous_injury_start-200:Consensous_injury_start+300]
+                d1.plot()
+                injury_time_start,injury_time_end,min_value = peak_detection(d1)
+                injury_time_start_norm = d1_index[injury_time_start]
+                # if the new injury start time fails to be in the correct place (±10% of Consensous injury time), there is something wrong experimentally and sample may need to be repeated.
+                Tolerance_Range = Consensous_injury_start*0.1
+                
+                if (Consensous_injury_start-Tolerance_Range<=injury_time_start_norm<=Consensous_injury_start+Tolerance_Range):
+                    Peak_window_only = d1.loc[injury_time_start:injury_time_end]
+                    measurements = calculate_peak_metrics(Peak_window_only,injury_time_start,injury_time_end,min_value,d1)
+                else:
+                    measurements = {'slope_of_recovery':0,'slope_val_after_treatment':0,'slope_val_before_treatment':0, 'area trapz':0, 'area simpson':0, 'recovery_time':0,'time_to_recover_to_50':0}
+
+                measurements['flagged as outlier']=True
+                All_calculations[id1] = measurements
+
+        
         normalised_Peaks = d2.loc[Consensous_injury_start:Consensous_injury_start+200,exp]
         # normalised_Peaks.plot()
         normalised_Peaks=normalised_Peaks.reset_index(drop=True)
@@ -234,8 +307,8 @@ def main():
     # slope_before_treatment
     # slope after treatment
     All_Experiment_Data.plot()
-    All_Experiment_Data.to_csv(f'Data3/{norm_method}/Data_Extracted_Peaks/Extracted_Peaks.csv')
-    All_calculations.to_csv(f'Data3/{norm_method}/Data_Extracted_Peaks/Metrics_Calculations.csv')
+    All_Experiment_Data.to_csv(f'Data3/{norm_method}/Data_Extracted_Peaks/Extracted_Peaks_{measurement}.csv')
+    All_calculations.to_csv(f'Data3/{norm_method}/Data_Extracted_Peaks/Metrics_Calculations_{measurement}.csv')
     control_samples = All_Experiment_Data[cols1[cols1.str.contains('CONTROL')]]
     control_samples.plot()
     # print(pd.DataFrame(slope_vals))
