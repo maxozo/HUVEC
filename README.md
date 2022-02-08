@@ -1,6 +1,6 @@
 # HUVEC
 
-![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+![Image](https://github.com/maxozo/HUVEC/blob/main/assets/Experimental_Design.png?raw=true)
 
 This repo is a collection of scripts that will eventually become an analysis pipeline for the HUVEC data analysis. 
 
