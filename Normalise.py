@@ -136,7 +136,7 @@ def Impedence_Data_prelog_normalise(Impedence_Data_pre):
         # log_control_norm.plot()
         
         # Replace the Data with norm version
-        Impedence_Data_pre[column]=min_max_norm_with_controls
+        Impedence_Data_pre[column]=log_control_norm
         
     return Impedence_Data_pre
 
@@ -168,21 +168,76 @@ def main():
     # 3) Frequencies
     # Will generate 3 files for each treatment, containing a scaled frequency profiles for each
     for data_type in data_types:
-        print(data_type)
+        # print(data_type)
         all_frequencies = get_all_frequencies(data_type,path)
-        print(all_frequencies)
+        # print(all_frequencies)
         all_data_remapped_Impedence_all = pd.DataFrame()
         all_data_remapped_Resistance_all = pd.DataFrame()
         all_data_remapped_Capacitance_all = pd.DataFrame()
         all_Data_times_all=pd.DataFrame()
         for freq in all_frequencies:
-            print(freq)
+            # print(freq)
             data_paths={}
             all_data_remapped_Impedence = pd.DataFrame()
             all_data_remapped_Resistance = pd.DataFrame()
             all_data_remapped_Capacitance = pd.DataFrame()
             all_Data_times=pd.DataFrame()
             experiment_count = 0
+            
+            # Get all the CONTROLS first
+            # for experiment in glob(f'{path}/*'):
+            #     experiment_count+=1
+            #     i+=1
+            #     print(experiment)
+            #     Wounding_File_Path = (glob(f"{experiment}/*WOUND*"))[0]
+            #     Thrombin_File_Path = (glob(f"{experiment}/*THROMBIN*"))[0]
+            #     try:
+            #         Proliferation_File_Path = (glob(f"{experiment}/*PROLIF*"))[0]
+            #     except:
+            #         Proliferation_File_Path = (glob(f"{experiment}/*prolif*"))[0]
+            #     Info_sheet_path =  (glob(f"{experiment}/*INFORMATION*"))[0]
+
+
+            #     data_paths['Wounding_Data']=Wounding_File_Path
+            #     data_paths['Thrombin_Data']=Thrombin_File_Path
+            #     data_paths['Prolif_Data']=Proliferation_File_Path
+            #     File_Path= data_paths[data_type]
+            #     Data,Date_time = read_ECIS_Data(File_Path,frequency=freq)
+
+            #     Info_Data = pd.read_excel(Info_sheet_path,header=None,index_col=0).iloc[:,[0,1]]
+            #     Info_Data=Info_Data.dropna(axis=0)
+               
+                
+            #     Impedence_Data_pre = process_data('Imp.(ohm)',Data)
+            #     Time_Data_pre = process_data('Time(hrs)',Data)
+            #     Capacitance_Data_pre = process_data('Cap.(nF)',Data)
+            #     Resistance_Data_pre = process_data('Res.(ohm)',Data)
+            
+            #     Impedence_Data = normalise_timescale(Impedence_Data_pre,Info_Data,Time_Data_pre,experiment_count)
+            #     Capacitance_Data =normalise_timescale(Capacitance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
+            #     Resistance_Data =normalise_timescale(Resistance_Data_pre,Info_Data,Time_Data_pre,experiment_count)
+                
+            #     # Here do the normalisations against the control samples.
+            #     # Impedence_Data = normalise_against_Controls(Impedence_Data)
+            #     # Capacitance_Data = normalise_against_Controls(Capacitance_Data)
+            #     # Resistance_Data = normalise_against_Controls(Resistance_Data)
+                
+            #     all_data_remapped_Impedence = pd.concat([all_data_remapped_Impedence, Impedence_Data], axis=1)
+            #     all_data_remapped_Capacitance = pd.concat([all_data_remapped_Capacitance, Capacitance_Data], axis=1)
+            #     all_data_remapped_Resistance = pd.concat([all_data_remapped_Resistance, Resistance_Data], axis=1)           
+            
+            
+            # CONTROLS_all_data_remapped_Impedence = all_data_remapped_Impedence.loc[:,all_data_remapped_Impedence.columns[all_data_remapped_Impedence.columns.str.contains('CONTROL')]]
+            # CONTROLS_all_data_remapped_Resistance = all_data_remapped_Resistance.loc[:,all_data_remapped_Resistance.columns[all_data_remapped_Resistance.columns.str.contains('CONTROL')]]
+            # CONTROLS_all_data_remapped_Capacitance = all_data_remapped_Capacitance.loc[:,all_data_remapped_Capacitance.columns[all_data_remapped_Capacitance.columns.str.contains('CONTROL')]]
+            
+            
+            #Loop through again to get all the normalised values. 
+            data_paths={}
+            all_data_remapped_Impedence = pd.DataFrame()
+            all_data_remapped_Resistance = pd.DataFrame()
+            all_data_remapped_Capacitance = pd.DataFrame()           
+            # then repeat by feeding in the norm controls.
             for experiment in glob(f'{path}/*'):
                 experiment_count+=1
                 i+=1
@@ -256,9 +311,9 @@ def main():
         all_Data_times_all_no_dubs['exp_id'] = all_Data_times_all_no_dubs.Sample.str.split('_').str[0]
         
         # all_Data_times_all_no_dubs.to_csv(f'Data3/{data_type}_metadata.tsv',sep='\t',index=False)
-        all_data_remapped_Resistance_all.to_csv(f'Data3/min_max_controls/{data_type}_all_data_remapped_Resistance.csv')
-        all_data_remapped_Capacitance_all.to_csv(f'Data3/min_max_controls/{data_type}_all_data_remapped_Capacitance.csv')
-        all_data_remapped_Impedence_all.to_csv(f'Data3/min_max_controls/{data_type}_all_data_remapped_Impedence.csv')
+        all_data_remapped_Resistance_all.to_csv(f'Data3/FC_controls/{data_type}_all_data_remapped_Resistance.csv')
+        all_data_remapped_Capacitance_all.to_csv(f'Data3/FC_controls/{data_type}_all_data_remapped_Capacitance.csv')
+        all_data_remapped_Impedence_all.to_csv(f'Data3/FC_controls/{data_type}_all_data_remapped_Impedence.csv')
         all_data_remapped_Capacitance.plot()
     print('Done')
 
