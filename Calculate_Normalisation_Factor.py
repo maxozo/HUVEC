@@ -14,8 +14,10 @@ import pandas as pd
 def main():
     print('ļets do some PCA')
     type = 'peak' #or slope
+    treatment='Thrombin'
+    measuremnet='Capacitance'
     norm_method ='not_normalised'
-    Data = pd.read_csv(f'/Users/mo11/work/HUVEC/Data3/{norm_method}/Data_Extracted_Peaks/Metrics_Calculations.csv',index_col=0)
+    Data = pd.read_csv(f'/Users/mo11/work/HUVEC/Data3/{norm_method}/Data_Extracted_Peaks/{treatment}_Metrics_Calculations_{measuremnet}.csv',index_col=0)
     # Now Loop through eachof the experiments and calculate the scaling factor based on the control.
     
     # Calculate the scaling factor for each measurement based on controls.
@@ -42,7 +44,7 @@ def main():
             nor_fact = Data_Control_Means.loc[col1,run_id]
             All_Samples.loc[sample1,col1]=All_Samples.loc[sample1,col1]*nor_fact
     
-    All_Samples.to_csv(f'/Users/mo11/work/HUVEC/Data3/{norm_method}/Data_Extracted_Peaks/Norm_Metrics_Calculations.csv')        
+    All_Samples.to_csv(f'/Users/mo11/work/HUVEC/Data3/{norm_method}/Data_Extracted_Peaks/{treatment}_Norm_Metrics_Calculations_{measuremnet}.csv')        
     
     print('Done')
     
