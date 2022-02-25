@@ -16,5 +16,3 @@ Curently, we have written a peak extraction and metrics extraction scripts.
 
 At low frequencies, comes underneath and around the cells. Higher freq - within the cells. Resistence cell layer exposes to the cell with oms law.  
 proliferation and barrier function is what we are interested in, ca lover frequency.
-
-
